@@ -7,8 +7,12 @@
 //#define VOITURE44 , VOITURE77, VOITURE5, VOITURE7, VOITURE3, VOITURE33, VOITURE31, VOITURE18, VOITURE35, VOITURE27, VOITURE55, VOITURE10, VOITURE28, VOITURE8, VOITURE20, VOITURE2, VOITURE14, VOITURE9, VOITURE16, VOITURE11
 
 int main(int argc, char *argv[]){
-	int temps;
-	int tableau[3];
+	course(44);
+	course(77);
+}
+int course(int numVoiture){
+int temps;
+	int tableau[4];
 	int S1 = 0;
 	int S2 = 0;
 	int S3 = 0;
@@ -22,16 +26,16 @@ int main(int argc, char *argv[]){
 	//pid = fork();
 	//if(pid==0){
 		int i;
+		srand(time(0));
 		for(i=0; i<3; i++)
 		{
-			srand(time(0));
 			tableau[i] = rand_a_b(20,40);
 		}
 		temps = tableau[0]+tableau[1]+tableau[2];
+		tableau[3] = temps;
 	//}else{
 		do{
 		  system("clear");
-          total = S1+S2+S3;
 		  fprintf(stderr, "Numéro            S1            S2            S3            Total");
 		  if(S1!= tableau[0]){
 			  if (S2!= tableau[1]){
@@ -65,7 +69,8 @@ int main(int argc, char *argv[]){
 				  }
 			  }
 		  }
-		  dqchance = rand_a_b(0,100);
+		  total = S1+S2+S3;
+		  dqchance = rand_a_b(0,1000);
 		  if(dq==true){
 			  fprintf(stderr, "\n  44              DQ            DQ            DQ            DQ \n");
 		  } else {
@@ -81,5 +86,5 @@ int main(int argc, char *argv[]){
 		}while(S1!= tableau[0] || S2 != tableau[1] || S3 != tableau[2]);
         
 	//}
-	return 0;
+	return tableau;
 }
