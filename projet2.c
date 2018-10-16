@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -7,10 +7,10 @@
 //#define VOITURE44 , VOITURE77, VOITURE5, VOITURE7, VOITURE3, VOITURE33, VOITURE31, VOITURE18, VOITURE35, VOITURE27, VOITURE55, VOITURE10, VOITURE28, VOITURE8, VOITURE20, VOITURE2, VOITURE14, VOITURE9, VOITURE16, VOITURE11
 
 int main(int argc, char *argv[]){
-	course(44);
-	course(77);
+	int voiture1 = courseDeVoitures(44);
+	int voiture2 = courseDeVoitures(77);
 }
-int course(int numVoiture){
+int courseDeVoitures(int numVoiture){
 int temps;
 	int tableau[4];
 	int S1 = 0;
