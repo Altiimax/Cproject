@@ -29,38 +29,7 @@ int courseDeVoitures(int numVoiture){
 		do{
 			system("clear");
 			fprintf(stderr, "Numéro            S1            S2            S3            Total");
-			if(S1!= tableau[0]){
-				if (S2!= tableau[1]){
-					if (S3!= tableau[2]){
-						++S1;
-						++S2;
-						++S3;
-					} else {
-						++S1;
-						++S2;
-					}
-				} else {
-					if (S3!= tableau[2]){
-						++S1;
-						++S3;
-					} else {
-						++S1;
-					}
-				}
-			} else {
-				if (S2!= tableau[1]){
-					if (S3!= tableau[2]){
-						++S2;
-						++S3;
-					} else {
-						++S2;
-					}
-				} else {
-					if (S3!= tableau[2]){
-						++S3;
-					}
-				}
-			}
+			++S1;
 			total = S1+S2+S3;
 			dqchance = rand_a_b(0,1000);
 			if(dq==true){
@@ -74,8 +43,46 @@ int courseDeVoitures(int numVoiture){
 					dq = false;
 				}
 			}
-			sleep(1);
-		}while(S1!= tableau[0] || S2 != tableau[1] || S3 != tableau[2]);
+			sleep(0.1);
+		}while(S1!= tableau[0]);
+		do{
+			system("clear");
+			fprintf(stderr, "Numéro            S1            S2            S3            Total");
+			++S2;
+			total = S1+S2+S3;
+			dqchance = rand_a_b(0,1000);
+			if(dq==true){
+				fprintf(stderr, "\n  %d              DQ            DQ            DQ            DQ \n", numVoiture);
+			} else {
+				fprintf(stderr, "\n  %d              %d            %d            %d            %d \n",numVoiture,S1,S2,S3,total);
+				if(dqchance<=5){
+					dq = true;
+				}
+				if(dqchance>5){
+					dq = false;
+				}
+			}
+			sleep(0.1);
+		}while(S2!= tableau[1]);
+		do{
+			system("clear");
+			fprintf(stderr, "Numéro            S1            S2            S3            Total");
+			++S3;
+			total = S1+S2+S3;
+			dqchance = rand_a_b(0,1000);
+			if(dq==true){
+				fprintf(stderr, "\n  %d              DQ            DQ            DQ            DQ \n", numVoiture);
+			} else {
+				fprintf(stderr, "\n  %d              %d            %d            %d            %d \n",numVoiture,S1,S2,S3,total);
+				if(dqchance<=5){
+					dq = true;
+				}
+				if(dqchance>5){
+					dq = false;
+				}
+			}
+			sleep(0.1);
+		}while(S3!= tableau[2]);
 }
 
 int main(int argc, char *argv[]){
