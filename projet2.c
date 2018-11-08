@@ -1,90 +1,98 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <time.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include <sys/shm.h>
-//#define VOITURE44 , VOITURE77, VOITURE5, VOITURE7, VOITURE3, VOITURE33, VOITURE31, VOITURE18, VOITURE35, VOITURE27, VOITURE55, VOITURE10, VOITURE28, VOITURE8, VOITURE20, VOITURE2, VOITURE14, VOITURE9, VOITURE16, VOITURE11
+#include <sys/ipc.h>
 
-int courseDeVoitures(int numVoiture){
-		int temps;
-		int tableau[4];
-		int S1 = 0;
-		int S2 = 0;
-		int S3 = 0;
-		bool dq = false;
-		int dqchance = 0;
+int main(){
+	int pid;
+	typedef struct
+	{
+		int idV;
+		int S1;
+		int S2;
+		int S3;
 		int total;
-		int rand_a_b(int a, int b){
-			return rand()%(b-a) +a;
-		}	
-		int i;
-		srand(time(0));
-		for(i=0; i<3; i++){
-			tableau[i] = rand_a_b(20,40);
+		bool disq;
+	} voiture;
+	
+	//variable qui sera place dans la shared memory au niveau du fils
+	voiture *voit;
+	
+	// variable qui va recuperer le message dans la shared memory au niveau du pere
+	voiture voitTable[20];
+	
+	voiture* mem;
+	int shmid;
+	key_t key;
+    key = 786;
+	shmid= shmget(key, 5*sizeof(voiture), IPC_CREAT | 0666);
+	mem = (voiture *)shmat(shmid, 0, 0);
+	if(mem==(void *)-1){			//verification 
+		printf("shmat a echoue\n");
+		exit(1);
+	}
+	//creation de 5 fils (pour l instant)
+	for(int i=0;i<5;i++){
+		pid=fork(); //création du fork
+		if(pid==-1){
+			printf("impossible de créer un fils\n");
+			exit(1);
 		}
-		temps = tableau[0]+tableau[1]+tableau[2];
-		tableau[3] = temps;
-		do{
-			system("clear");
-			fprintf(stderr, "Numéro            S1            S2            S3            Total");
-			++S1;
-			total = S1+S2+S3;
-			dqchance = rand_a_b(0,1000);
-			if(dq==true){
-				fprintf(stderr, "\n  %d              DQ            DQ            DQ            DQ \n", numVoiture);
-			} else {
-				fprintf(stderr, "\n  %d              %d            %d            %d            %d \n",numVoiture,S1,S2,S3,total);
-				if(dqchance<=5){
-					dq = true;
-				}
-				if(dqchance>5){
-					dq = false;
-				}
+		if(pid==0){
+			voit->idV = (int)getpid();
+			//Ecriture dans la variable à transmettre "voit"
+			int rand_a_b(int a, int b){							
+				return rand()%(b-a) +a;																		
+			}										                
+			srand(time(0));
+			voit->S1=rand_a_b(20,40);
+			voit->S2=rand_a_b(20,40);
+			voit->S3=rand_a_b(20,40);
+			printf("la voiture est composée de: %d, %d, %d\n",voit->S1, voit->S2, voit->S3);
+			
+			
+			if(shmid<0){
+				printf("ERREUR: la création du segment a échoué\n");
+				exit(1);
 			}
-			sleep(0.1);
-		}while(S1!= tableau[0]);
-		do{
-			system("clear");
-			fprintf(stderr, "Numéro            S1            S2            S3            Total");
-			++S2;
-			total = S1+S2+S3;
-			dqchance = rand_a_b(0,1000);
-			if(dq==true){
-				fprintf(stderr, "\n  %d              DQ            DQ            DQ            DQ \n", numVoiture);
-			} else {
-				fprintf(stderr, "\n  %d              %d            %d            %d            %d \n",numVoiture,S1,S2,S3,total);
-				if(dqchance<=5){
-					dq = true;
-				}
-				if(dqchance>5){
-					dq = false;
-				}
+			
+			if(mem==(void *)-1){			//verification 
+				printf("shmat a echoue\n");
+				exit(1);
 			}
-			sleep(0.1);
-		}while(S2!= tableau[1]);
-		do{
-			system("clear");
-			fprintf(stderr, "Numéro            S1            S2            S3            Total");
-			++S3;
-			total = S1+S2+S3;
-			dqchance = rand_a_b(0,1000);
-			if(dq==true){
-				fprintf(stderr, "\n  %d              DQ            DQ            DQ            DQ \n", numVoiture);
-			} else {
-				fprintf(stderr, "\n  %d              %d            %d            %d            %d \n",numVoiture,S1,S2,S3,total);
-				if(dqchance<=5){
-					dq = true;
-				}
-				if(dqchance>5){
-					dq = false;
-				}
+			memcpy(mem, voit, sizeof(voit));
+			
+			/*
+			 * detachement au segment
+			 */
+			if(shmdt(mem)==-1){
+				perror("detachement impossible\n") ;
+				exit(1) ;
 			}
-			sleep(0.1);
-		}while(S3!= tableau[2]);
-}
-
-int main(int argc, char *argv[]){
-	courseDeVoitures(44);
+			
+			exit(1);
+		} else {
+			if((mem=shmat(shmid, 0, 0))==(void *)-1){
+				perror("shmat");
+				exit(1);
+			}
+			//memcpy(&tableau, mem, sizeof(mem));
+			/*for(int i =0; i<5;i++){
+				voitTable[i]=*mem;
+			}*/
+			if(shmdt(mem)==-1){
+				perror("detachement impossible\n");
+				exit(1);
+			}
+			printf("je suis le père\nJe lis ce que le fils a mis: %d, %d, %d\n",(*mem).S1, (*mem).S2,(*mem).S3);
+			exit(1);
+		}
+	}
+	shmctl(shmid,IPC_RMID,0);
 }
