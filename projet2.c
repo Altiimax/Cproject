@@ -10,20 +10,37 @@
 #include <sys/ipc.h>
 #include <semaphore.h>
 
-int main(){
-	int pid;
-	typedef struct
+
+typedef struct
 	{
 		int idV;
-		int S1;
-		int S2;
-		int S3;
+		double S1;
+		double S2;
+		double S3;
 		int total;
 		bool disq;
 	} voiture;
 	
+void ordonnerTableauVoitures(voiture tableau[], long tailleTableau, char secteur) {
+	long i,t,k=0;
+	char sec[2];
+	for(t = 1; t < tailleTableau; t++) {
+		for(i=0; i < tailleTableau - 1; i++) { 
+			if(tableau[i].secteur > tableau[i+1].secteur) { 
+				k= tableau[i].secteur - tableau[i+1].secteur; 
+				tableau[i].secteur -= k; 
+				tableau[i+1].secteur += k;
+				tableau[i+1].secteur += k;
+			}
+		} 
+	} 
+}
+	
+int main(){
+	int pid;
 	//variables 
 	voiture* mem;
+	voiture tabVoitures[3];
 	int shmid;
 	key_t key;
     key = 7816;
@@ -60,12 +77,12 @@ int main(){
 				return rand()%(b-a) +a;																		
 			}
 			srand(time(0));
-			voit.S1=rand_a_b(20,40);
-			voit.S2=rand_a_b(20,40);
-			voit.S3=rand_a_b(20,40);
+			voit.S1=rand_a_b(20.0,40.0);
+			voit.S2=rand_a_b(20.0,40.0);
+			voit.S3=rand_a_b(20.0,40.0);
 			
 			memcpy(mem+i, &voit, sizeof(voit));
-			printf("la voiture est composée de: %d, %d, %d\n",mem[i].S1, mem[i].S2, mem[i].S3);
+			printf("la voiture est composée de: %f, %f, %f\n",mem[i].S1, mem[i].S2, mem[i].S3);
 			
 			/*
 			 * detachement au segment
@@ -89,11 +106,18 @@ int main(){
 		}
 	}
 	for (int i=0;i<3;i++){
-		sleep(3);
-		printf("je suis le père\nJe lis ce que le fils a mis: %d, %d, %d---\n",mem[i].S1, mem[i].S2, mem[i].S3);
+		tabVoitures[i] = mem[i];
+		sleep(2);
+		printf("je suis le père\nJe lis ce que le fils a mis: %f, %f, %f---\n",mem[i].S1, mem[i].S2, mem[i].S3);
 	}
+	
+	ordonnerTableauVoitures(tabVoitures,3,"S1");
+	ordonnerTableauVoitures(tabVoitures,3,"S2");
+	ordonnerTableauVoitures(tabVoitures,3,"S3");
+
+	
 	if(shmdt(mem)==-1){
-				perror("detachement impossible\n") ;
-				exit(1) ;
-			}
+		perror("detachement impossible\n") ;
+		exit(1) ;
+		}
 }
