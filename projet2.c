@@ -37,6 +37,7 @@ int main(){
 			exit(1);
 		}
 		if(pid==0){ 
+			system("clear");
 			sleep(1);
 			voiture voit;
 			voit.idV = i;
@@ -63,12 +64,18 @@ int main(){
 		}	*/
 		}
 	}
+	system("clear");
+	fprintf(stderr, "Numéro\tS1 \tS2 \tS3 \tTotal");
 	for (int i=0;i<20;i++){
 		tabVoitures[i] = mem[i];
 		sleep(2);
-		printf("je suis le père\nJe lis ce que le fils a mis: %d, %d, %d---\n",tabVoitures[i].S1,tabVoitures[i].S2,tabVoitures[i].S3);
-	}
 	
+		/**
+		* AFFICHAGE DU PERE
+		*/
+		tabVoitures[i].total = tabVoitures[i].S1+tabVoitures[i].S2+tabVoitures[i].S3;
+		fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[i].idV,tabVoitures[i].S1,tabVoitures[i].S2,tabVoitures[i].S3,tabVoitures[i].total);
+	}
 	/*ordonnerTableauVoitures(tabVoitures,20);
 
 	for (int i=0;i<20;i++){
