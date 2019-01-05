@@ -34,28 +34,30 @@ int main(){
 			voit.S1=rand_a_b(20,40);
 			voit.S2=rand_a_b(20,40);
 			voit.S3=rand_a_b(20,40);
-			memcpy(&((mem+i)->v[i]), &voit, sizeof(voit));
-			printf("la voiture est composée de: %d, %d, %d, %d\n",mem[i].v[i].S1, mem[i].v[i].S2, mem[i].v[i].S3, mem[i].v[i].idV);
+			memcpy(&(mem->v[i]), &voit, sizeof(voit));
+			printf("CCNuméro %d: %d, %d, %d, %d, initcars = %d\n",i ,mem->v[i].S1, mem->v[i].S2, mem->v[i].S3, mem->v[i].idV, mem->init_cars);
 			detShm(shmid, mem);
-			sem_wait(&sem);
-			mem->init_cars++;
-			sem_post(&sem);
+			sem_wait(&(mem->sem));
+			printf("je suis dans la semapore");
+			(mem->init_cars)++;
+			sem_post(&(mem->sem));
+			exit(1);
 		}
 	}
 	while(1){
-		sem_wait(&sem);
+		sem_wait(&(mem->sem));
 		if(mem->init_cars == 19){
-			sem_post(&sem);
+			sem_post(&(mem->sem));
 			break;
 		}
 		sleep(1);
-		sem_post(&sem);
+		sem_post(&(mem->sem));
 	}
 	
 	system("clear");	
 	fprintf(stderr, "Numéro\tS1 \tS2 \tS3 \tTotal\n");
 	for (int i=0;i<20;i++){
-		tabVoitures[i] = mem[i].v[i];
+		tabVoitures[i] = mem->v[i];
 	
 		/**
 		* AFFICHAGE DU PERE
