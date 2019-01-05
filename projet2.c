@@ -12,24 +12,14 @@
 #include "utils.h"
 	
 int main(){
+	//variables
 	int pid;
-	//variables 
-	voiture* mem;
 	voiture tabVoitures[20];
-	int shmid;
-	key_t key = 7816;
-	shmid= shmget(key, 20*sizeof(voiture), 0666 | IPC_CREAT);
-	if(shmid<0){
-		printf("ERREUR: la création du segment a échoué\n");
-		exit(1);
-	}
-	mem = shmat(shmid, 0, 0);
-	if(mem==(void *)-1){			//verification 
-		printf("shmat a echoue\n");
-		exit(1);
-	}
+	initShm();
+	semInit();
+	attShm();
 	
-	//creation de 3 fils
+	//creation de 20 fils
 	for(int i=0;i<20;i++){
 		pid=fork(); //création du fork
 		if(pid==-1){
@@ -37,38 +27,35 @@ int main(){
 			exit(1);
 		}
 		if(pid==0){ 
-			system("clear");
-			sleep(1);
 			voiture voit;
-			voit.idV = i;
+			voit.idV = getpid();
 			srand(time(0)^(getpid()));
 			//Ecriture dans la variable à transmettre "voit"
 			voit.S1=rand_a_b(20,40);
 			voit.S2=rand_a_b(20,40);
 			voit.S3=rand_a_b(20,40);
-			memcpy(mem+i, &voit, sizeof(voit));
-			printf("la voiture est composée de: %d, %d, %d\n",mem[i].S1, mem[i].S2, mem[i].S3);
-			
+			memcpy(&((mem+i)->v[i]), &voit, sizeof(voit));
+			printf("la voiture est composée de: %d, %d, %d, %d\n",mem[i].v[i].S1, mem[i].v[i].S2, mem[i].v[i].S3, mem[i].v[i].idV);
 			detShm(shmid, mem);
-			
-			exit(1);
-		/*} else {
-			sleep(1);
-			printf("je suis le père\nJe lis ce que le fils a mis: %d---\n",mem[i].S1);
-			
-			if(shmdt(mem)==-1){
-				perror("detachement impossible\n");
-				exit(1);
-			}
-			exit(1);
-		}	*/
+			sem_wait(&sem);
+			mem->init_cars++;
+			sem_post(&sem);
 		}
 	}
-	system("clear");
-	fprintf(stderr, "Numéro\tS1 \tS2 \tS3 \tTotal");
+	while(1){
+		sem_wait(&sem);
+		if(mem->init_cars == 19){
+			sem_post(&sem);
+			break;
+		}
+		sleep(1);
+		sem_post(&sem);
+	}
+	
+	system("clear");	
+	fprintf(stderr, "Numéro\tS1 \tS2 \tS3 \tTotal\n");
 	for (int i=0;i<20;i++){
-		tabVoitures[i] = mem[i];
-		sleep(2);
+		tabVoitures[i] = mem[i].v[i];
 	
 		/**
 		* AFFICHAGE DU PERE
