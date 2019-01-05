@@ -1,4 +1,5 @@
-// Structure de la voiture
+	
+// Structures
 typedef struct{
 	int idV; // id de la voiture
 	int S1; //temps pris pour le secteur1
@@ -8,6 +9,22 @@ typedef struct{
 	int fini; // si la voiture a fini la course
 	bool disq; //boolean, true: la voiture est disqualifié, false: la voiture ne l'est pas
 } voiture;
+
+typedef struct { 
+	sem_t sem; 
+	int init_cars;
+	voiture v[20];
+} shared_state_t;
+
+/**
+* Variable
+*/
+
+int semid;
+shared_state_t* mem;
+int shmid;
+key_t key = 7816;
+sem_t sem;
 
 /**
 * tri du tableau
@@ -39,22 +56,18 @@ int rand_a_b(int a, int b){
 /**
 * Fonction d'initialisation de la mémoire partagée
 */
-/*void initShm(){
-	key_t key = 7816;
-	int shmid;
-	shmid= shmget(key, 20*sizeof(voiture), 0666 | IPC_CREAT);
+void initShm(){
+	shmid= shmget(key, sizeof(shared_state_t), 0666 | IPC_CREAT);
 	if(shmid<0){
 		printf("ERREUR: la création du segment a échoué\n");
 		exit(1);
 	}
-}*/
+}
 
 /**
 *Fonction qui permet de s'attacher a la mémoire partagée
 */
-void attShm(int shmid){
-	printf("%d\n", shmid);
-	voiture* mem;
+void attShm(){
 	mem = shmat(shmid, 0, 0);
 	if(mem==(void *)-1){			//verification 
 		printf("shmat a echoue\n");
@@ -65,10 +78,22 @@ void attShm(int shmid){
 /**
 *Fonction qui permet de se détacher de la mémoire partagée et la supprimer
 */
-void detShm(int shmid, voiture* mem){
+void detShm(int shmid, shared_state_t* mem){
 	if(shmdt(mem)==-1){
 		perror("detachement impossible\n") ;
 		exit(1);
 	}
 	shmctl(shmid,IPC_RMID, NULL);
 }
+
+/**
+* Sémaphore partie
+*/
+
+void semInit(){
+	if( (semid = sem_init(&sem, 1, 1)) < 0 ) {	
+		perror("erreur semget");
+		exit(1);
+	}
+}
+
