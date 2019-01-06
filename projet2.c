@@ -16,8 +16,11 @@ int main(){
 	int pid;
 	voiture tabVoitures[20];
 	initShm();
-	semInit();
 	attShm();
+	if( (sem_init(&(mem->sem), 1, 1)) < 0 ) {	
+		perror("erreur semget");
+		exit(1);
+	}
 	
 	//creation de 20 fils
 	for(int i=0;i<20;i++){
@@ -37,21 +40,35 @@ int main(){
 			memcpy(&(mem->v[i]), &voit, sizeof(voit));
 			printf("CCNuméro %d: %d, %d, %d, %d, initcars = %d\n",i ,mem->v[i].S1, mem->v[i].S2, mem->v[i].S3, mem->v[i].idV, mem->init_cars);
 			detShm(shmid, mem);
-			sem_wait(&(mem->sem));
+			printf("je vais utiliser la semaphore");
+			if( (sem_wait(&(mem->sem))) < 0 ) {	
+				perror("erreur semget");
+				exit(1);
+			}
 			printf("je suis dans la semapore");
 			(mem->init_cars)++;
-			sem_post(&(mem->sem));
+			if( (sem_post(&(mem->sem))) < 0 ) {	
+				perror("erreur semget");
+				exit(1);
+			}
 			exit(1);
 		}
 	}
 	while(1){
-		sem_wait(&(mem->sem));
+		printf("je vais utiliser la semaphore");
+		if( (sem_wait(&(mem->sem))) < 0 ) {	
+			perror("erreur semget");
+			exit(1);
+		}
 		if(mem->init_cars == 19){
+			printf("je vais utiliser la semaphore");
 			sem_post(&(mem->sem));
 			break;
+		}else{
+			printf("je vais utiliser la semaphore");
+			sem_post(&(mem->sem));
+			sleep(1);
 		}
-		sleep(1);
-		sem_post(&(mem->sem));
 	}
 	
 	system("clear");	
