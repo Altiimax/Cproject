@@ -20,11 +20,10 @@ typedef struct {
 * Variable
 */
 
-int semid;
+//int semid;
 shared_state_t* mem;
 int shmid;
 key_t key = 7816;
-sem_t sem;
 
 /**
 * tri du tableau
@@ -90,10 +89,10 @@ void detShm(int shmid, shared_state_t* mem){
 * Sémaphore partie
 */
 
-void semInit(){
-	if( (semid = sem_init(&sem, 1, 1)) < 0 ) {	
+/*void semInit(shared_state_t* stru){
+	if( (sem_init(stru->sem, 1, 1)) < 0 ) {	
 		perror("erreur semget");
 		exit(1);
 	}
-}
+}*/
 
