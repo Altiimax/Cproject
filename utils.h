@@ -6,6 +6,8 @@ typedef struct{
 	int S2;	//temps pris pour le secteur 2
 	int S3; //temps pris pour le secteur3 
 	int total; // total des 3 secteurs
+	bool dq;
+	int dqchance;
 	int fini; // si la voiture a fini la course
 	bool disq; //boolean, true: la voiture est disqualifié, false: la voiture ne l'est pas
 } voiture;
@@ -19,30 +21,38 @@ typedef struct {
 /**
 * Variable
 */
-
-//int semid;
+//int S1=0, S2=0, S3=0, total=0;
+int tableau[3][20];
 shared_state_t* mem;
 int shmid;
 key_t key = 7816;
 
 /**
+*Fonction max
+*/
+
+
+
+/**
 * tri du tableau
 */
-void ordonnerTableauVoitures(voiture tableau[], long tailleTableau/*, int mode*/) {
+void ordonnerTableauVoitures(voiture tableau[], long tailleTableau) {
 	voiture rempl1;
-	voiture rempl2;
-	printf("je vais trier le tableau\n");
-	long i,t;
+	int i,t;
 	for(t = 0; t < tailleTableau; t++) {
-		for(i=1; i < tailleTableau - 1; i++) { 
-			if(tableau[i].S1 > tableau[i+t].S1) { 
-				rempl1 = tableau[i];
-				rempl2 = tableau[i+t];
-				tableau[i] = rempl2;
-				tableau[i+t] = rempl1;
+		for(i=1; i < tailleTableau; i++) { 
+			if(tableau[t].S1 < tableau[i].S1) { 
+				rempl1 = tableau[t];
+				tableau[t] = tableau[i];
+				tableau[i] = rempl1;
+				i--;
 			}
 		} 
 	}
+	rempl1=tableau[0];
+    for(i=0;i<tailleTableau;i++)
+    tableau[i]=tableau[i+1];
+    tableau[tailleTableau-1]=rempl1;
 }
 
 /** 
