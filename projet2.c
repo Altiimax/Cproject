@@ -11,19 +11,35 @@
 #include <semaphore.h>
 #include "utils.h"
 	
-int main(){
+int main(int argc, char argv[]){
 	//variables
 	voiture tabVoitures[20];
 	voiture disqVoit[20];
-	/*for(int i =0; i<20;i++){
-		meilleur[i] = 0;
-	}*/
-	initShm();
-	attShm();
-	if( (sem_init(&(mem->sem), 1, 1)) < 0 ) {	
-		perror("erreur semget");
-		exit(1);
+	bool fin = true;
+	while(fin){
+		initShm();
+		attShm();
+		if( (sem_init(&(mem->sem), 1, 1)) < 0 ) {	
+			perror("erreur semget");
+			exit(1);
+		}
+		//mem->init_cars = 0;
+		genUnTour(tabVoitures);
+		if(tabVoitures[1].meilleurTour == 0){
+			for(int i =0; i<20;i++){
+				sem_wait(&(mem->sem));
+				tabVoitures[i].nombreTours = 0;
+				sem_post(&(mem->sem));
+			}
+		}
+		afficheUnTour(tabVoitures);
+		for(int i=0;i<20; i++){
+			fprintf(stderr,"total = %d\n", totaltab[i]);
+			tabVoitures[i].nombreTours++;
+			if(totaltab[i] >= 350){
+				fin= false;
+			}
+		}
 	}
-	genUnTour(tabVoitures);
-	afficheUnTour(tabVoitures);
+	fprintf(stderr,"\nFIN\n");
 }
