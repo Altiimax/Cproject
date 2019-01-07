@@ -15,6 +15,8 @@ int main(){
 	//variables
 	int pid;
 	voiture tabVoitures[20];
+	voiture finiVoit[20];
+	voiture disqVoit[20];
 	initShm();
 	attShm();
 	if( (sem_init(&(mem->sem), 1, 1)) < 0 ) {	
@@ -39,6 +41,7 @@ int main(){
 			voit.S3=rand_a_b(20,40);
 			voit.dqchance = 0;
 			voit.dq = false;
+			voit.fini = 0;
 			memcpy(&(mem->v[i]), &voit, sizeof(voit));
 			if( (sem_wait(&(mem->sem))) < 0 ) {	
 				perror("erreur semget");
@@ -74,91 +77,77 @@ int main(){
 		tabVoitures[i] = mem->v[i];
 		tabVoitures[i].total = tabVoitures[i].S1+tabVoitures[i].S2+tabVoitures[i].S3;
 		fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[i].idV,tabVoitures[i].S1,tabVoitures[i].S2,tabVoitures[i].S3,tabVoitures[i].total);
-		tableau[0][i]=tabVoitures[i].S1;
-		tableau[1][i]=tabVoitures[i].S2;
-		tableau[2][i]=tabVoitures[i].S3;
 	}
-	for(int i = 0; i<20;i++){
-		int S1=0, S2=0, S3=0, total=0;
+	reset(tabVoitures);
+	while(mem->fini != 20){
+		//sem_wait(&(mem->sem));
 		system("clear");
 		fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
-		do{
-			//sem_wait(&(mem->sem));
-			system("clear");
-			fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
-			for(int j=0; j<20; j++){
-				if (S1 != tabVoitures[j].S1){
-					++S1;
-				}
-				total = S1+S2+S3;
-				sem_wait(&(mem->sem));
-				tabVoitures[j].dqchance = rand_a_b(0,1000);
-				if(tabVoitures[j].dq==true){
-					fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \n", tabVoitures[j].S1);
-				} else {
-					fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[j].S1,S1,S2,S3,total);
-					if(tabVoitures[j].dqchance<=5){
-						tabVoitures[j].dq = true;
-					}
-					if(tabVoitures[j].dqchance>5){
-						tabVoitures[j].dq = false;
-					}
-				}
-				sem_post(&(mem->sem));
+		++S1;
+		for(int j=0; j<20; j++){
+			sem_wait(&(mem->sem));
+			if (S1 == tabVoitures[j].S1){
+				tabVoitures[j].fini = mem->fini ;
+				//finiVoit[(tabVoitures[j].fini)] = tabVoitures[j];
+				affichageFini(tabVoitures, j, 0);
+				++(mem->fini);
+			} else if (tabVoitures[j].fini != 0){ 
+				affichageFini(tabVoitures, j, 0);
+			} else {
+				affichage(tabVoitures, j, 0);
 			}
-			//sem_post(&(mem->sem));
-			sleep(1);
-		}while(S1!= tableau[0][i]);
-		do{
-			//sem_wait(&(mem->sem));
-			system("clear");
-			fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
-			++S2;
-			total = S1+S2+S3;
-			for(int j=0;j<20;j++){
-				sem_wait(&(mem->sem));
-				tabVoitures[j].dqchance = rand_a_b(0,1000);
-				if(tabVoitures[j].dq==true){
-					fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \n", tabVoitures[j].S1);
-				} else {
-					fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[j].S1,S1,S2,S3,total);
-					if(tabVoitures[j].dqchance<=5){
-						tabVoitures[j].dq = true;
-					}
-					if(tabVoitures[j].dqchance>5){
-						tabVoitures[j].dq = false;
-					}
-				}
-				sem_post(&(mem->sem));
-			}
-			sleep(1);
-			//sem_post(&(mem->sem));
-		}while(S2!= tableau[1][i]);
-		do{
-			//sem_wait(&(mem->sem));
-			system("clear");
-			fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
-			++S3;
-			total = S1+S2+S3;
-			for(int j=0;j<20;j++){
-				sem_wait(&(mem->sem));
-				tabVoitures[j].dqchance = rand_a_b(0,1000);
-				if(tabVoitures[j].dq==true){
-					fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \n", tabVoitures[j].idV);
-				} else {
-					fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[j].idV,S1,S2,S3,total);
-					if(tabVoitures[j].dqchance<=5){
-						tabVoitures[j].dq = true;
-					}
-					if(tabVoitures[j].dqchance>5){
-						tabVoitures[j].dq = false;
-					}
-				}
-				sem_post(&(mem->sem));
-			}
-			sleep(1);
-			//sem_post(&(mem->sem));
-		}while(S3!= tableau[2][i]);
+			sem_post(&(mem->sem));
+		}
+		fprintf(stderr, "VALEUR DE FIN: %d", mem->fini);
+		sleep(0.7);
 	}
+	for (int i=0;i<20;i++){
+		tabVoitures[i] = mem->v[i];
+		tabVoitures[i].total = tabVoitures[i].S1+tabVoitures[i].S2+tabVoitures[i].S3;
+		fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[i].idV,tabVoitures[i].S1,tabVoitures[i].S2,tabVoitures[i].S3,tabVoitures[i].total);
+	}
+	fprintf(stderr, "RESET");
+	reset(tabVoitures);
+	while(mem->fini != 20){
+		system("clear");
+		fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
+		++S2;
+		fprintf(stderr,"\nSecteur 2 du deuxième bool: %d\nS2: %d\n",tabVoitures[1].fini, S2);
+		for(int j=0; j<20; j++){
+			sem_wait(&(mem->sem));
+			if (S2 == tabVoitures[j].S2){
+				tabVoitures[j].fini = true ;
+				//finiVoit[(tabVoitures[j].fini)] = tabVoitures[j];
+				affichageFini(tabVoitures, j, 1);
+				++(mem->fini);
+			} else if (tabVoitures[j].fini){ 
+				affichageFini(tabVoitures, j, 1);
+			} else {
+				affichage(tabVoitures, j, 1);
+			}
+		}
+		sleep(1);
+	}
+	reset(tabVoitures);
+	while(mem->fini != 20){
+		system("clear");
+		fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal");
+		++S3;
+		for(int j=0; j<20; j++){
+			sem_wait(&(mem->sem));
+			if (S3 == tabVoitures[j].S3){
+				tabVoitures[j].fini = mem->fini ;
+				//finiVoit[(tabVoitures[j].fini)] = tabVoitures[j];
+				affichageFini(tabVoitures, j, 2);
+				++(mem->fini);
+			} else if (tabVoitures[j].fini){ 
+				affichageFini(tabVoitures, j, 2);
+			} else {
+				affichage(tabVoitures, j, 2);
+			}
+			sem_post(&(mem->sem));
+		}
+		sleep(1);
+	};
 	detShm(shmid, mem);
 }
