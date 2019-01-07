@@ -1,6 +1,6 @@
 // Structures
 typedef struct{
-    int numero;
+    int numero; //numéro de la voiture en réalité
     int idV; // id de la voiture
     int S1; //temps pris pour le secteur1
     int S2;    //temps pris pour le secteur 2
@@ -27,6 +27,7 @@ typedef struct {
 
 int num[20]={44, 77, 5, 7, 3, 33, 11, 31, 18, 35, 27, 55, 10, 28, 8, 20, 2, 14, 9, 16};
 int S1=0, S2=0, S3=0, total=0, meilleur[20];
+int totaltab[20]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 shared_state_t* mem;
 int shmid;
 int pid;
@@ -70,9 +71,9 @@ void affichage(voiture tableau[], int j, int sec){
 	if( sec == 0){
 		total = S1+S2+S3;
 		if(tableau[j].dq==true){
-			fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \t%d \n", tableau[j].numero, tableau[j].meilleurTour);
+			fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \t%d\n", tableau[j].numero, tableau[j].meilleurTour);
 		} else {
-			fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \t%d \n",tableau[j].numero,S1,S2,S3,total, tableau[j].meilleurTour);
+			fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \t%d\n",tableau[j].numero,S1,S2,S3,total, tableau[j].meilleurTour);
 			if(tableau[j].dqchance<=5){
 				tableau[j].dq = true;
 			}
@@ -98,7 +99,7 @@ void affichage(voiture tableau[], int j, int sec){
 		if(tableau[j].dq==true){
 			fprintf(stderr, "\n  %d \tDQ \tDQ \tDQ \tDQ \t%d\n", tableau[j].numero,tableau[j].meilleurTour);
 		} else {
-			fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \t%d\n",tableau[j].numero,tableau[j].S1,tableau[j].S2,S3,total,tableau[j].meilleurTour);
+			fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \t%d \n",tableau[j].numero,tableau[j].S1,tableau[j].S2,S3,total,tableau[j].meilleurTour);
 			if(tableau[j].dqchance<=5){
 				tableau[j].dq = true;
 			}
@@ -234,7 +235,6 @@ void genUnTour(voiture tabVoitures[]){
 				perror("erreur semget");
 				exit(1);
 			}
-			printf("Numéro %d: %d, %d, %d, %d, initcars = %d\n",i ,mem->v[i].S1, mem->v[i].S2, mem->v[i].S3, mem->v[i].idV, mem->init_cars);
 			detShm(shmid, mem);
 			exit(1);
 		}
@@ -252,6 +252,7 @@ void genUnTour(voiture tabVoitures[]){
 			sleep(1);
 		}
 	}
+	sleep(3);
 	for (int i=0;i<20;i++){
 		tabVoitures[i] = mem->v[i];
 		tabVoitures[i].numero = num[i];
@@ -259,7 +260,6 @@ void genUnTour(voiture tabVoitures[]){
 			tabVoitures[i].meilleurTour = meilleur[i];
 		}
 		tabVoitures[i].total = tabVoitures[i].S1+tabVoitures[i].S2+tabVoitures[i].S3;
-		fprintf(stderr, "\n  %d \t%d \t%d \t%d \t%d \n",tabVoitures[i].idV,tabVoitures[i].S1,tabVoitures[i].S2,tabVoitures[i].S3,tabVoitures[i].total);
 	}
 }
 
@@ -270,7 +270,6 @@ void genUnTour(voiture tabVoitures[]){
 void afficheUnTour(voiture tabVoitures []){
 	reset(tabVoitures);
 	while(mem->fini != 20){
-		//sem_wait(&(mem->sem));
 		system("clear");
 		fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal \tMeilleur tour");
 		++S1;
@@ -287,7 +286,7 @@ void afficheUnTour(voiture tabVoitures []){
 			}
 			sem_post(&(mem->sem));
 		}
-		usleep(0);
+		usleep(1000*100);
 	}
 	reset(tabVoitures);
 	while(mem->fini != 20){
@@ -307,7 +306,7 @@ void afficheUnTour(voiture tabVoitures []){
 			}
 			sem_post(&(mem->sem));
 		}
-		usleep(0);
+		usleep(1000*100);
 	}
 	reset(tabVoitures);
 	while(mem->fini != 20){
@@ -327,16 +326,22 @@ void afficheUnTour(voiture tabVoitures []){
 			}
 			sem_post(&(mem->sem));
 		}
-		usleep(0);
+		usleep(1000*100);
 	}
 	for(int i=0;i<20;i++){
-		fprintf(stderr, "%d\n",tabVoitures[i].dq);
-		if(meilleur[i] < tabVoitures[i].total && tabVoitures[i].dq==0){
+		sem_wait(&(mem->sem));
+		if((meilleur[i] > tabVoitures[i].total || tabVoitures[1].meilleurTour == 0) && tabVoitures[i].dq==0){
 			meilleur[i] = tabVoitures[i].total;
+		} else {
+			meilleur[i] = tabVoitures[i].meilleurTour;
 		}
+		sem_post(&(mem->sem));
 	}
 	for(int i=0;i<20;i++){
+		sem_wait(&(mem->sem));
 		tabVoitures[i].meilleurTour = meilleur[i];
+		totaltab[i] += tabVoitures[i].total;
+		sem_post(&(mem->sem));
 	}
 	system("clear");
 	fprintf(stderr, "Numéro \tS1 \tS2 \tS3 \tTotal \tMeilleur tour");
